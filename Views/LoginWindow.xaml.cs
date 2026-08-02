@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -46,6 +46,13 @@ namespace MarineWorkshopApp.Views
             {
                 MessageBox.Show("اسم المستخدم أو كلمة المرور غير صحيحة!", "خطأ في الدخول", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void Input_KeyDown(object sender, KeyEventArgs e)
+        {
+            // تسجيل الدخول عند الضغط على Enter في أي حقل
+            if (e.Key == Key.Enter)
+                LoginButton_Click(sender, e);
         }
     }
 }
