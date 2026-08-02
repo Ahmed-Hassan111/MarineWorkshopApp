@@ -1,0 +1,85 @@
+﻿<Window x:Class="MarineWorkshopApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="نظام إدارة العمالة - شركة أعالي البحار" 
+        Height="800" Width="1300"
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft"
+        Background="{StaticResource PageBgBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="{StaticResource NavBgBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="110"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="120"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="20,0">
+                    <TextBlock Text="⚙️ نظام إدارة العمالة" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="الإدارة اللوجستية - أعالي البحار" Foreground="#94A3B8" FontSize="11" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                    <RadioButton Content="👷 إدارة العمالة واليوميات" 
+                                 GroupName="SidebarMenu"
+                                 IsChecked="True"
+                                 Command="{Binding NavigateCommand}" 
+                                 CommandParameter="Laborers"
+                                 Style="{StaticResource SidebarNavButtonStyle}"/>
+
+                    <RadioButton Content="🏢 حسابات العملاء" 
+                                 GroupName="SidebarMenu"
+                                 Command="{Binding NavigateCommand}" 
+                                 CommandParameter="Clients"
+                                 Style="{StaticResource SidebarNavButtonStyle}"/>
+
+                    <RadioButton Content="📄 الفواتير وبيان الأعمال" 
+                                 GroupName="SidebarMenu"
+                                 Command="{Binding NavigateCommand}" 
+                                 CommandParameter="Invoices"
+                                 Style="{StaticResource SidebarNavButtonStyle}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,0,15">
+                    <RadioButton Content="⚙️ الإعدادات" 
+                                 GroupName="SidebarMenu"
+                                 Command="{Binding NavigateCommand}" 
+                                 CommandParameter="Settings"
+                                 Style="{StaticResource SidebarNavButtonStyle}"/>
+                    <Button Content="🚪 تسجيل الخروج" 
+                            Click="Logout_Click"
+                            Background="Transparent" Foreground="#94A3B8" FontSize="14"
+                            Height="48" Margin="12,4" Padding="16,0" BorderThickness="0"
+                            HorizontalContentAlignment="Right" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="65"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                <Grid Margin="20,0">
+                    <TextBlock Text="{Binding CurrentPageTitle}" 
+                               FontSize="20" FontWeight="Bold" 
+                               Foreground="{StaticResource TextPrimaryBrush}" 
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Margin="20"/>
+        </Grid>
+    </Grid>
+</Window>

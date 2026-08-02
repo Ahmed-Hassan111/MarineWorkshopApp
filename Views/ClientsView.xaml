@@ -1,0 +1,104 @@
+﻿<UserControl x:Class="MarineWorkshopApp.Views.ClientsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FlowDirection="RightToLeft">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- نموذج إضافة / تعديل عميل -->
+        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E2E8F0" BorderThickness="1" Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="🏢 بيانات العميل" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,12">
+                            <TextBlock Text="اسم المالك (Owner)" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding OwnerName, UpdateSourceTrigger=PropertyChanged}" Height="40" Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,12">
+                            <TextBlock Text="اسم الشركة" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Height="40" Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,12">
+                            <TextBlock Text="رقم الهاتف" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" Height="40" Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,12">
+                            <TextBlock Text="لوجو الشركة (يظهر في الفواتير)" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding LogoPath}" IsReadOnly="True" Height="40" Padding="10,0" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+                                <Button Grid.Column="1" Content="📁 اختيار" Command="{Binding BrowseLogoCommand}" Padding="12,8"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
+                            <Button Content="💾 حفظ العميل" Style="{StaticResource ActionButtonStyle}" Command="{Binding SaveClientCommand}" Margin="0,0,8,0"/>
+                            <Button Content="مسح الحقول" Command="{Binding ClearFormCommand}" Padding="15,8" Margin="0,0,8,0"/>
+                            <Button Content="🗑️ حذف" Command="{Binding DeleteClientCommand}" Background="#EF4444" Foreground="White" Padding="15,8" BorderThickness="0"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- معاينة اللوجو -->
+                <Border Grid.Column="2" Background="#F8FAFC" CornerRadius="8" Padding="10">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="معاينة اللوجو" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <Border Width="120" Height="120" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <Image Source="{Binding LogoPreview}" Stretch="Uniform" Margin="8"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- بحث -->
+        <DockPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBox Width="280" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                     DockPanel.Dock="Right" Padding="10,8" Tag="بحث باسم العميل أو الشركة..."/>
+        </DockPanel>
+
+        <!-- جدول العملاء -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="15" BorderBrush="#E2E8F0" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding Clients}" SelectedItem="{Binding SelectedClient}"
+                      AutoGenerateColumns="False" IsReadOnly="True" RowHeight="42"
+                      GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#F1F5F9" BorderThickness="0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="اسم الشركة" Binding="{Binding CompanyName}" Width="2*"/>
+                    <DataGridTextColumn Header="اسم المالك" Binding="{Binding OwnerName}" Width="1.5*"/>
+                    <DataGridTextColumn Header="الهاتف" Binding="{Binding Phone}" Width="*"/>
+                    <DataGridTextColumn Header="اللوجو" Binding="{Binding LogoPath}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>
