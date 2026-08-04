@@ -41,7 +41,7 @@ namespace MarineWorkshopApp.Data
             {
                 Id = 1,
                 WorkshopName = "أعالي البحار",
-                Subtitle = "ورشة صيانة وتصليح السفن",
+                Subtitle = " صيانة وتصليح السفن",
                 CurrencySymbol = "ج.م"
             });
         }
