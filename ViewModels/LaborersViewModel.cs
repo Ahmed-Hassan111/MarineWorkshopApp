@@ -70,6 +70,11 @@ namespace MarineWorkshopApp.ViewModels
         [ObservableProperty] private ObservableCollection<AdvanceDisplay> _advances = new();
         [ObservableProperty] private ObservableCollection<WeeklySettlementDisplay> _weeklySettlements = new();
 
+        // ======= إجماليات السلف =======
+        [ObservableProperty] private string _totalAllAdvancesText = string.Empty;
+        [ObservableProperty] private Laborer? _selectedAdvanceSummaryLaborer;
+        [ObservableProperty] private string _laborerAdvancesTotalText = string.Empty;
+
         public LaborersViewModel()
         {
             LoadLaborers();
@@ -524,6 +529,42 @@ namespace MarineWorkshopApp.ViewModels
             LoadWorkLogs();
             CalculateWeeklySettlements();
             MessageBox.Show("تم تقفيل الأسبوع بنجاح ✅", "تقفيل الأسبوع", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // ======= إجمالي كل السلف لجميع العمال (كل التاريخ) =======
+        [RelayCommand]
+        private void ShowTotalAllAdvances()
+        {
+            using var db = new AppDbContext();
+            var total = db.AdvanceRecords.Sum(a => (decimal?)a.Amount) ?? 0m;
+            var count = db.AdvanceRecords.Count();
+            TotalAllAdvancesText = $"إجمالي السلف (كل العمال): {total:N0} ج.م  |عدد السلف: {count}";
+        }
+
+        // ======= إجمالي سلف عامل مختار =======
+        [RelayCommand]
+        private void ShowLaborerTotalAdvances()
+        {
+            if (SelectedAdvanceSummaryLaborer == null)
+            {
+                MessageBox.Show("يرجى اختيار عامل أولاً", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var db = new AppDbContext();
+            var id = SelectedAdvanceSummaryLaborer.Id;
+            var total = db.AdvanceRecords
+                .Where(a => a.LaborerId == id)
+                .Sum(a => (decimal?)a.Amount) ?? 0m;
+            var count = db.AdvanceRecords.Count(a => a.LaborerId == id);
+            var pending = db.AdvanceRecords
+                .Where(a => a.LaborerId == id && !a.IsDeducted)
+                .Sum(a => (decimal?)a.Amount) ?? 0m;
+
+            LaborerAdvancesTotalText =
+                $"إجمالي سلف {SelectedAdvanceSummaryLaborer.Name}: {total:N0} ج.م" +
+                $"  |  عدد: {count}" +
+                $"  |  غير مخصوم بعد: {pending:N0} ج.م";
         }
     }
 }

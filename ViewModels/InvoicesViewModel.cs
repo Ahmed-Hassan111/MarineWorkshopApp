@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MarineWorkshopApp.Core.Models;
 using MarineWorkshopApp.Data;
@@ -28,6 +28,10 @@ namespace MarineWorkshopApp.ViewModels
         [ObservableProperty] private decimal _grandTotal;
         [ObservableProperty] private string _previewInvoiceNumber = "جديد";
         [ObservableProperty] private BitmapImage? _clientLogoPreview;
+
+        // الفواتير المحفوظة
+        [ObservableProperty] private ObservableCollection<Invoice> _allInvoices = new();
+        [ObservableProperty] private Invoice? _selectedSavedInvoice;
 
         public InvoicesViewModel()
         {
@@ -180,6 +184,55 @@ namespace MarineWorkshopApp.ViewModels
 
             InvoicePdfService.GenerateAndSave(tempInvoice, SelectedClient, CompanySettings, CurrentInvoiceItems.ToList(), dialog.FileName);
             MessageBox.Show("تم تحميل PDF بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // ========== استرجاع كل الفواتير المحفوظة ==========
+        [RelayCommand]
+        public void LoadAllInvoices()
+        {
+            using var db = new AppDbContext();
+            var invoices = db.Invoices
+                .Include(i => i.Client)
+                .Include(i => i.Items)
+                .OrderByDescending(i => i.Date)
+                .ToList();
+            AllInvoices = new ObservableCollection<Invoice>(invoices);
+
+            if (!invoices.Any())
+                MessageBox.Show("لا توجد فواتير محفوظة حتى الآن", "معلومة", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // ========== طباعة فاتورة مختارة من القائمة ==========
+        [RelayCommand]
+        public void PrintSelectedInvoicePdf()
+        {
+            if (SelectedSavedInvoice == null)
+            {
+                MessageBox.Show("يرجى اختيار فاتورة من القائمة أولاً", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using var db = new AppDbContext();
+            var invoice = db.Invoices
+                .Include(i => i.Client)
+                .Include(i => i.Items)
+                .FirstOrDefault(i => i.Id == SelectedSavedInvoice.Id);
+
+            if (invoice == null || invoice.Client == null)
+            {
+                MessageBox.Show("تعذر تحميل بيانات الفاتورة", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var settings = db.Settings.FirstOrDefault() ?? CompanySettings;
+            var savedPath = InvoicePdfService.GenerateAndSave(invoice, invoice.Client, settings, invoice.Items);
+
+            var result = MessageBox.Show(
+                $"تم إنشاء PDF للفاتورة رقم {invoice.InvoiceNumber}\n\nهل تريد فتح الملف؟",
+                "PDF جاهز", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+            if (result == MessageBoxResult.Yes)
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(savedPath) { UseShellExecute = true });
         }
     }
 }

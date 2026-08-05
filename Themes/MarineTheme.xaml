@@ -1,5 +1,6 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:MarineWorkshopApp.Core.Converters">
 
     <!-- Palette Colors -->
     <Color x:Key="NavBgColor">#0B2559</Color>
@@ -91,5 +92,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- CountToVisibilityConverter -->
+    <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
 
 </ResourceDictionary>
