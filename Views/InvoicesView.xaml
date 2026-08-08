@@ -3,6 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FlowDirection="RightToLeft">
 
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="420"/>
@@ -54,6 +58,7 @@
                 <TextBlock Text="إجمالي البيان:" FontSize="13" Foreground="#64748B"/>
                 <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ج.م'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}" Margin="0,4,0,20"/>
 
+                <!-- زرا الحفظ والتحميل فقط -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -67,112 +72,133 @@
             </StackPanel>
         </Border>
 
-        <!-- معاينة بيان الأعمال + قائمة الفواتير -->
+        <!-- الجانب الأيمن: المعاينة + جداول الفواتير -->
         <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="25" BorderBrush="#E2E8F0" BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <!-- فواتير محفوظة -->
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="200"/>
-                </Grid.RowDefinitions>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
 
-                <!-- أزرار استرجاع / طباعة -->
-                <Grid Grid.Row="0" Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="🔄 استرجاع الفواتير"
-                            Command="{Binding LoadAllInvoicesCommand}"
-                            Background="#0B2559" Foreground="White"
-                            FontSize="13" FontWeight="SemiBold"
-                            Padding="12,10" BorderThickness="0" Cursor="Hand">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="8"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-                    <Button Grid.Column="2" Content="🖨️ طباعة PDF للمختار"
-                            Command="{Binding PrintSelectedInvoicePdfCommand}"
-                            Background="#1D4ED8" Foreground="White"
-                            FontSize="13" FontWeight="SemiBold"
-                            Padding="12,10" BorderThickness="0" Cursor="Hand">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="8"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-                </Grid>
+                    <!-- أزرار الأعلى -->
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="🔄 استرجاع الفواتير"
+                                Command="{Binding LoadAllInvoicesCommand}"
+                                Background="#0B2559" Foreground="White"
+                                FontSize="13" FontWeight="SemiBold"
+                                Padding="12,10" BorderThickness="0" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Grid.Column="2" Content="🖨️ طباعة PDF للمختار"
+                                Command="{Binding PrintSelectedInvoicePdfCommand}"
+                                Background="#1D4ED8" Foreground="White"
+                                FontSize="13" FontWeight="SemiBold"
+                                Padding="12,10" BorderThickness="0" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </Grid>
 
-                <Grid Grid.Row="1" Margin="0,0,0,20">
-                    <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="{Binding CompanySettings.WorkshopName}" FontSize="18" FontWeight="Bold" Foreground="#0B2559"/>
-                        <TextBlock Text="بيان أعمال تصنيع وتوريد" FontSize="12" Foreground="#64748B"/>
+                    <!-- ===== جدول كل الفواتير — يظهر فقط عند الضغط على "استرجاع الفواتير" ===== -->
+                    <Border Visibility="{Binding ShowAllInvoices, Converter={StaticResource BoolToVis}}"
+                            Background="#EFF6FF" CornerRadius="10" Padding="15" Margin="0,0,0,20"
+                            BorderBrush="#BFDBFE" BorderThickness="1">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="📂 كل الفواتير المحفوظة" FontSize="14" FontWeight="Bold" Foreground="#1D4ED8" DockPanel.Dock="Right"/>
+                                <TextBlock Text="{Binding AllInvoices.Count, StringFormat='({0} فاتورة)'}" FontSize="12" Foreground="#64748B" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding AllInvoices}"
+                                      SelectedItem="{Binding SelectedSavedInvoice}"
+                                      AutoGenerateColumns="False" IsReadOnly="True"
+                                      GridLinesVisibility="Horizontal" BorderThickness="0"
+                                      Background="Transparent" RowHeight="36"
+                                      MaxHeight="300">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="العميل" Binding="{Binding Client.CompanyName}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Date, StringFormat='{}{0:yyyy/MM/dd}'}" Width="*"/>
+                                    <DataGridTextColumn Header="الإجمالي" Binding="{Binding GrandTotal, StringFormat='{}{0:N0} ج.م'}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ===== معاينة الفاتورة الحالية ===== -->
+                    <Grid Margin="0,0,0,20">
+                        <StackPanel HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding CompanySettings.WorkshopName}" FontSize="18" FontWeight="Bold" Foreground="#0B2559"/>
+                            <TextBlock Text="بيان أعمال تصنيع وتوريد" FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+
+                        <StackPanel HorizontalAlignment="Left">
+                            <Border Width="70" Height="70" CornerRadius="8" Background="#F8FAFC" Margin="0,0,0,8">
+                                <Image Source="{Binding ClientLogoPreview}" Stretch="Uniform" Margin="4"/>
+                            </Border>
+                            <TextBlock Text="{Binding SelectedClient.CompanyName, FallbackValue='—'}" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedClient.OwnerName, StringFormat='المالك: {0}', FallbackValue=''}" FontSize="11" Foreground="#64748B"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock Text="{Binding PreviewInvoiceNumber, StringFormat='بيان أعمال رقم: {0}'}" FontSize="14" FontWeight="Bold" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Separator Margin="0,0,0,15"/>
+
+                    <!-- جدول بنود الفاتورة الحالية -->
+                    <DataGrid ItemsSource="{Binding CurrentInvoiceItems}" AutoGenerateColumns="False" IsReadOnly="True" 
+                              GridLinesVisibility="Horizontal" BorderThickness="0" Background="Transparent" RowHeight="40"
+                              MinHeight="80">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="البند" Binding="{Binding ItemName}" Width="2*"/>
+                            <DataGridTextColumn Header="المقاسات" Binding="{Binding Dimensions}" Width="1.5*"/>
+                            <DataGridTextColumn Header="العدد" Binding="{Binding Quantity}" Width="*"/>
+                            <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} ج.م'}" Width="*"/>
+                            <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} ج.م'}" Width="1.2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel HorizontalAlignment="Left" Margin="0,15,0,20">
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBlock Text="الإجمالي الكلي: " Width="120" FontSize="16" FontWeight="Bold" Foreground="#0B2559"/>
+                            <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ج.م'}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <StackPanel HorizontalAlignment="Left">
-                        <Border Width="70" Height="70" CornerRadius="8" Background="#F8FAFC" Margin="0,0,0,8">
-                            <Image Source="{Binding ClientLogoPreview}" Stretch="Uniform" Margin="4"/>
-                        </Border>
-                        <TextBlock Text="{Binding SelectedClient.CompanyName, FallbackValue='—'}" FontSize="12" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding SelectedClient.OwnerName, StringFormat='المالك: {0}', FallbackValue=''}" FontSize="11" Foreground="#64748B"/>
-                    </StackPanel>
-                </Grid>
+                    <!-- ===== آخر 10 فواتير — تظهر دائماً تلقائياً ===== -->
+                    <Border Background="#F8FAFC" CornerRadius="10" Padding="15" Margin="0,0,0,0"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="🕐 آخر الفواتير المحفوظة" FontSize="13" FontWeight="Bold" Foreground="#0B2559" DockPanel.Dock="Right"/>
+                                <TextBlock Text="(أحدث 10 فواتير)" FontSize="11" Foreground="#94A3B8" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataGrid ItemsSource="{Binding RecentInvoices}"
+                                      SelectedItem="{Binding SelectedSavedInvoice}"
+                                      AutoGenerateColumns="False" IsReadOnly="True"
+                                      GridLinesVisibility="Horizontal" BorderThickness="0"
+                                      Background="Transparent" RowHeight="34">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="العميل" Binding="{Binding Client.CompanyName}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Date, StringFormat='{}{0:yyyy/MM/dd}'}" Width="*"/>
+                                    <DataGridTextColumn Header="الإجمالي" Binding="{Binding GrandTotal, StringFormat='{}{0:N0} ج.م'}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
 
-                <DockPanel Grid.Row="2" Margin="0,0,0,15">
-                    <TextBlock Text="{Binding PreviewInvoiceNumber, StringFormat='بيان أعمال رقم: {0}'}" FontSize="14" FontWeight="Bold" DockPanel.Dock="Right"/>
-                </DockPanel>
-
-                <Separator Grid.Row="2" Margin="0,25,0,15"/>
-
-                <DataGrid Grid.Row="3" ItemsSource="{Binding CurrentInvoiceItems}" AutoGenerateColumns="False" IsReadOnly="True" 
-                          GridLinesVisibility="Horizontal" BorderThickness="0" Background="Transparent" RowHeight="40">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="البند" Binding="{Binding ItemName}" Width="2*"/>
-                        <DataGridTextColumn Header="المقاسات" Binding="{Binding Dimensions}" Width="1.5*"/>
-                        <DataGridTextColumn Header="العدد" Binding="{Binding Quantity}" Width="*"/>
-                        <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} ج.م'}" Width="*"/>
-                        <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} ج.م'}" Width="1.2*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <StackPanel Grid.Row="4" HorizontalAlignment="Left" Margin="0,15,0,0">
-                    <StackPanel Orientation="Horizontal" Margin="0,5">
-                        <TextBlock Text="الإجمالي الكلي: " Width="120" FontSize="16" FontWeight="Bold" Foreground="#0B2559"/>
-                        <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ج.م'}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBlueBrush}"/>
-                    </StackPanel>
                 </StackPanel>
-
-                <!-- قسم الفواتير المحفوظة -->
-                <Border Grid.Row="5" Background="#F1F5F9" CornerRadius="8" Padding="10,8" Margin="0,15,0,8"
-                        Visibility="{Binding AllInvoices.Count, Converter={StaticResource CountToVisibilityConverter}}">
-                    <TextBlock Text="📋 الفواتير المحفوظة — اختر فاتورة ثم اضغط طباعة PDF"
-                               FontSize="12" FontWeight="SemiBold" Foreground="#0B2559"/>
-                </Border>
-
-                <DataGrid Grid.Row="6"
-                          ItemsSource="{Binding AllInvoices}"
-                          SelectedItem="{Binding SelectedSavedInvoice}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          GridLinesVisibility="Horizontal" BorderThickness="0"
-                          Background="Transparent" RowHeight="36"
-                          Visibility="{Binding AllInvoices.Count, Converter={StaticResource CountToVisibilityConverter}}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="1.5*"/>
-                        <DataGridTextColumn Header="العميل" Binding="{Binding Client.CompanyName}" Width="1.5*"/>
-                        <DataGridTextColumn Header="التاريخ" Binding="{Binding Date, StringFormat='{}{0:yyyy/MM/dd}'}" Width="*"/>
-                        <DataGridTextColumn Header="الإجمالي" Binding="{Binding GrandTotal, StringFormat='{}{0:N0} ج.م'}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
+            </ScrollViewer>
         </Border>
     </Grid>
 </UserControl>

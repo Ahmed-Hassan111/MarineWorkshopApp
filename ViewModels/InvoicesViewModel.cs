@@ -29,8 +29,12 @@ namespace MarineWorkshopApp.ViewModels
         [ObservableProperty] private string _previewInvoiceNumber = "جديد";
         [ObservableProperty] private BitmapImage? _clientLogoPreview;
 
-        // الفواتير المحفوظة
+        // آخر 10 فواتير — تُحدَّث تلقائياً بعد كل حفظ
+        [ObservableProperty] private ObservableCollection<Invoice> _recentInvoices = new();
+
+        // كل الفواتير — تظهر فقط عند الضغط على "استرجاع كل الفواتير"
         [ObservableProperty] private ObservableCollection<Invoice> _allInvoices = new();
+        [ObservableProperty] private bool _showAllInvoices = false;
         [ObservableProperty] private Invoice? _selectedSavedInvoice;
 
         public InvoicesViewModel()
@@ -46,6 +50,19 @@ namespace MarineWorkshopApp.ViewModels
             if (Clients.Any() && SelectedClient == null)
                 SelectedClient = Clients.First();
             UpdateClientLogo();
+            LoadRecentInvoices();
+        }
+
+        private void LoadRecentInvoices()
+        {
+            using var db = new AppDbContext();
+            var recent = db.Invoices
+                .Include(i => i.Client)
+                .Include(i => i.Items)
+                .OrderByDescending(i => i.Date)
+                .Take(10)
+                .ToList();
+            RecentInvoices = new ObservableCollection<Invoice>(recent);
         }
 
         partial void OnSelectedClientChanged(Client? value) => UpdateClientLogo();
@@ -155,6 +172,9 @@ namespace MarineWorkshopApp.ViewModels
             if (result == MessageBoxResult.Yes)
                 Process.Start(new ProcessStartInfo(savedPath) { UseShellExecute = true });
 
+            // تحديث آخر 10 فواتير تلقائياً
+            LoadRecentInvoices();
+
             ClearInvoice();
         }
 
@@ -186,10 +206,18 @@ namespace MarineWorkshopApp.ViewModels
             MessageBox.Show("تم تحميل PDF بنجاح", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // ========== استرجاع كل الفواتير المحفوظة ==========
+        // ========== استرجاع كل الفواتير المحفوظة (toggle) ==========
         [RelayCommand]
         public void LoadAllInvoices()
         {
+            // إذا كان الجدول ظاهراً، أخفه
+            if (ShowAllInvoices)
+            {
+                ShowAllInvoices = false;
+                AllInvoices = new ObservableCollection<Invoice>();
+                return;
+            }
+
             using var db = new AppDbContext();
             var invoices = db.Invoices
                 .Include(i => i.Client)
@@ -199,7 +227,12 @@ namespace MarineWorkshopApp.ViewModels
             AllInvoices = new ObservableCollection<Invoice>(invoices);
 
             if (!invoices.Any())
+            {
                 MessageBox.Show("لا توجد فواتير محفوظة حتى الآن", "معلومة", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            ShowAllInvoices = true;
         }
 
         // ========== طباعة فاتورة مختارة من القائمة ==========
